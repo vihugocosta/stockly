@@ -38,4 +38,8 @@ app.use("/movements", requireAuth, movementRoutes);
 
 // Porta do servidor
 const PORT = 3001;
+// Inicia o servidor
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
 
