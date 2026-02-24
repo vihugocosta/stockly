@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stockly — Controle de Estoque</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <!-- Tela de login (usuário e senha padrão: admin) -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <h1 class="login-logo">Stockly</h1>
+      <p class="login-tagline">Controle de estoque</p>
+      <p class="login-hint">Padrão: usuário e senha = <strong>admin</strong></p>
+      <form id="login-form" class="login-form">
+        <div class="form-row">
+          <label for="login-username">Usuário</label>
+          <input type="text" id="login-username" name="username" value="admin" placeholder="admin" required autocomplete="username" />
+        </div>
+        <div class="form-row">
+          <label for="login-password">Senha</label>
+          <input type="password" id="login-password" name="password" placeholder="admin" required autocomplete="current-password" />
+        </div>
+        <p id="login-error" class="login-error" role="alert" hidden></p>
+        <button type="submit" class="btn btn-primary btn-login">Entrar</button>
+      </form>
+      <div class="login-footer">
+        <p class="muted">Não tem conta? <button type="button" id="show-register" class="btn-link">Cadastrar-se</button></p>
+      </div>
+
+      <form id="register-form" class="login-form" hidden>
+        <div class="form-row">
+          <label for="register-username">Usuário</label>
+          <input type="text" id="register-username" name="username" placeholder="Escolha um usuário" required />
+        </div>
+        <div class="form-row">
+          <label for="register-password">Senha</label>
+          <input type="password" id="register-password" name="password" placeholder="Senha (mín. 4 caracteres)" required />
+        </div>
+        <div class="form-row">
+          <label for="register-password-confirm">Confirmar senha</label>
+          <input type="password" id="register-password-confirm" name="passwordConfirm" placeholder="Confirme a senha" required />
+        </div>
+        <p id="register-error" class="login-error" role="alert" hidden></p>
+        <div style="display:flex;gap:.5rem">
+          <button type="submit" class="btn btn-primary">Criar conta</button>
+          <button type="button" id="cancel-register" class="btn btn-secondary">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="app-container" class="app" hidden>
+    <header class="header">
+      <div class="header-inner">
+        <div class="header-brand">
+          <h1 class="logo">Stockly</h1>
+          <p class="tagline">Controle de estoque</p>
+        </div>
+        <div class="header-actions">
+          <span class="header-user" id="header-username"></span>
+          <button type="button" id="logout-btn" class="btn btn-secondary btn-logout">Sair</button>
+          <button type="button" id="theme-toggle" class="btn btn-icon" aria-label="Alternar tema claro/escuro" title="Alternar tema">☀️</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <aside class="sidebar">
+        <!-- Dashboard / Estatísticas -->
+        <section class="section dashboard" aria-label="Resumo do estoque">
+          <h2 class="section-title">Resumo</h2>
+          <div class="stats">
+            <div class="stat-card">
+              <span class="stat-value" id="stat-total-products">0</span>
+              <span class="stat-label">Produtos</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value" id="stat-total-units">0</span>
+              <span class="stat-label">Unidades</span>
+            </div>
+            <div class="stat-card stat-warning">
+              <span class="stat-value" id="stat-low-stock">0</span>
+              <span class="stat-label">Estoque baixo</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Novo produto -->
+        <section class="section add-product">
+          <h2 class="section-title">Novo produto</h2>
+          <form id="form-product" class="form-product">
+            <div class="form-row">
+              <label for="product-name">Nome</label>
+              <input type="text" id="product-name" name="name" placeholder="Ex: Teclado" required />
+            </div>
+            <div class="form-row">
+              <label for="product-quantity">Quantidade</label>
+              <input type="number" id="product-quantity" name="quantity" min="0" value="0" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Adicionar</button>
+          </form>
+        </section>
+      </aside>
+
+      <!-- Área com abas: Produtos | Histórico -->
+      <div class="content-area">
+        <div class="tabs" role="tablist" aria-label="Seções">
+          <button type="button" id="tab-products" class="tab active" role="tab" aria-selected="true" aria-controls="panel-products" data-tab="products">Produtos</button>
+          <button type="button" id="tab-history" class="tab" role="tab" aria-selected="false" aria-controls="panel-history" data-tab="history">Histórico</button>
+        </div>
+
+        <!-- Aba Produtos -->
+        <section id="panel-products" class="section product-list panel" role="tabpanel" aria-labelledby="tab-products">
+          <div class="section-header">
+            <h2 class="section-title">Produtos em estoque</h2>
+            <span id="status" class="status" aria-live="polite"></span>
+          </div>
+          <div class="toolbar">
+            <div class="search-wrap">
+              <label for="search" class="sr-only">Buscar por nome</label>
+              <input type="search" id="search" placeholder="Buscar produto…" autocomplete="off" />
+            </div>
+            <div class="sort-wrap">
+              <label for="sort">Ordenar</label>
+              <select id="sort" aria-label="Ordenar lista">
+                <option value="name-asc">Nome (A → Z)</option>
+                <option value="name-desc">Nome (Z → A)</option>
+                <option value="qty-desc">Quantidade (maior)</option>
+                <option value="qty-asc">Quantidade (menor)</option>
+              </select>
+            </div>
+            <button type="button" id="export-csv" class="btn btn-secondary">Exportar CSV</button>
+          </div>
+          <div id="loading" class="loading" hidden>Carregando…</div>
+          <div id="error" class="error" role="alert" hidden></div>
+          <div class="table-wrap">
+            <table class="product-table" aria-label="Lista de produtos">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Nome</th>
+                  <th scope="col">Quantidade</th>
+                  <th scope="col" class="th-actions">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="product-list"></tbody>
+            </table>
+          </div>
+          <p id="empty-state" class="empty-state" hidden>Nenhum produto cadastrado. Adicione o primeiro no painel à esquerda.</p>
+          <p id="empty-search" class="empty-state empty-search" hidden>Nenhum resultado para "<strong id="search-query"></strong>".</p>
+        </section>
+
+        <!-- Aba Histórico -->
+        <section id="panel-history" class="section history-panel panel" role="tabpanel" aria-labelledby="tab-history" hidden>
+          <div class="section-header">
+            <h2 class="section-title">Movimentações do estoque</h2>
+            <span id="history-status" class="status" aria-live="polite"></span>
+          </div>
+          <div class="toolbar history-toolbar">
+            <div class="filter-type">
+              <label for="history-filter-type" class="sr-only">Tipo</label>
+              <select id="history-filter-type" aria-label="Filtrar por tipo">
+                <option value="">Todos os tipos</option>
+                <option value="cadastro">Cadastro</option>
+                <option value="alteração_quantidade">Alteração quantidade</option>
+                <option value="alteração_nome">Alteração nome</option>
+                <option value="exclusão">Exclusão</option>
+              </select>
+            </div>
+            <div class="filter-user">
+              <label for="history-filter-user" class="sr-only">Usuário</label>
+              <input type="search" id="history-filter-user" placeholder="Filtrar por usuário" />
+            </div>
+            <button type="button" id="history-export-csv" class="btn btn-secondary">Exportar CSV</button>
+          </div>
+          <div id="history-loading" class="loading" hidden>Carregando…</div>
+          <div id="history-error" class="error" role="alert" hidden></div>
+          <div class="table-wrap history-table-wrap">
+            <table class="history-table" aria-label="Histórico de movimentações">
+              <thead>
+                <tr>
+                  <th scope="col">Data / Hora</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Produto</th>
+                  <th scope="col">Detalhe</th>
+                  <th scope="col">Modificado por</th>
+                </tr>
+              </thead>
+              <tbody id="movement-list"></tbody>
+            </table>
+          </div>
+          <p id="history-empty" class="empty-state" hidden>Nenhuma movimentação registrada.</p>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>Stockly — Atalho: <kbd>/</kbd> buscar · <kbd>Esc</kbd> fechar</p>
+    </footer>
+  </div>
+  <script src="/js/app.js"></script>
+</body>
+</html>
